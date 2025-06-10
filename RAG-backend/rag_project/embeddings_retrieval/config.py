@@ -1,2 +1,0 @@
-VECTOR_DIM = 384
-EMBED_MODEL_NAME = 'all-MiniLM-L6-v2'
