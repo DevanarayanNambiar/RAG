@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot-Ai</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #10a37f;
+      --light-bg: #f0f2f5;
+      --light-chat-bg: #f7f8fa;
+      --dark-bg: #1e1e2f;
+      --dark-chat-bg: #2e2e3f;
+      --light-text: #333;
+      --dark-text: #eee;
+      --bot-msg-light: #e5e7eb;
+      --bot-msg-dark: #2e2e3f;
+      --bot-text-dark: #ffffff;
+    }
+
+    body[data-theme='light'] {
+      --background-color: var(--light-bg);
+      --chat-background: var(--light-chat-bg);
+      --text-color: var(--light-text);
+      --bot-msg: var(--bot-msg-light);
+      --bot-text: var(--light-text);
+    }
+
+    body[data-theme='dark'] {
+      --background-color: var(--dark-bg);
+      --chat-background: var(--dark-chat-bg);
+      --text-color: var(--dark-text);
+      --bot-msg: var(--bot-msg-dark);
+      --bot-text: var(--bot-text-dark);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .new-chat-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    .new-chat-button:hover {
+      background-color: #0e8e70;
+    }
+
+    .sidebar-section {
+      margin-top: 20px;
+    }
+
+    .sidebar-section h4 {
+      margin: 10px 0 5px;
+      font-size: 16px;
+    }
+
+    .history-item {
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 16px;
+      background-color: var(--background-color);
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .selectors {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 14px;
+      background-color: #fff;
+    }
+
+    .chat-area {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: var(--chat-background);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      padding: 12px 16px;
+      margin: 8px 0;
+      border-radius: 10px;
+      max-width: 70%;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      position: relative;
+    }
+
+    .message.user {
+      background-color: var(--primary-color);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 0;
+    }
+
+    .message.bot {
+      background-color: var(--bot-msg);
+      color: var(--bot-text);
+      margin-right: auto;
+      border-bottom-left-radius: 0;
+    }
+
+    .message-actions {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      font-size: 16px;
+      align-items: center;
+    }
+
+    .message-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-size: 16px;
+    }
+
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background-color: #fff;
+    }
+
+    .bottom-bar input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .bottom-bar input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      background: var(--primary-color);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .upload-label::before {
+      content: '📎';
+      margin-right: 6px;
+    }
+
+    .bottom-bar button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Theme Toggle Switch */
+    .theme-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+      background-color: #ccc;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+    }
+
+    .theme-switch[data-theme="dark"] {
+      background-color: #4a5568;
+    }
+
+    .theme-toggle-thumb {
+      height: 22px;
+      width: 22px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      transform: translateX(0);
+    }
+
+    .theme-switch[data-theme="dark"] .theme-toggle-thumb {
+      transform: translateX(24px);
+    }
+
+    .theme-icon {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      fill: #333;
+      top: 6px;
+    }
+
+    .theme-icon.sun {
+      left: 6px;
+    }
+
+    .theme-icon.moon {
+      right: 6px;
+      fill: #f9d71c;
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState("");
+      const [model, setModel] = useState("gpt-3.5");
+      const [chunkSize, setChunkSize] = useState("500");
+      const [theme, setTheme] = useState("light");
+      const [history, setHistory] = useState([]);
+
+      useEffect(() => {
+        document.body.setAttribute("data-theme", theme);
+      }, [theme]);
+
+      const addMessage = (sender, text, bookmark = false) => {
+        const msg = { sender, text, bookmark };
+        setMessages(prev => [...prev, msg]);
+        setHistory(prev => [...prev, msg]);
+      };
+
+      const toggleBookmark = index => {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[index].bookmark = !updated[index].bookmark;
+          return updated;
+        });
+      };
+
+      const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Copied to clipboard!");
+        });
+      };
+
+      const handleSend = () => {
+        if (!input.trim()) return;
+        addMessage("user", input);
+        setTimeout(() => addMessage("bot", `Echo: ${input}`), 500);
+        setInput("");
+      };
+
+      const handleFileUpload = e => {
+        const uploaded = Array.from(e.target.files);
+        uploaded.forEach((file) => {
+          const fileMessage = `${file.name} uploaded.`;
+          addMessage("user", fileMessage);
+        });
+      };
+
+      const handleNewChat = () => {
+        setMessages([]);
+        setInput("");
+      };
+
+      return (
+        <div className="app-container">
+          <div className="sidebar">
+            <h2>Chatbot-Ai</h2>
+            <button className="new-chat-button" onClick={handleNewChat}>New Chat</button>
+            <div className="sidebar-section">
+              <h4>History</h4>
+              {history.map((h, i) => (
+                <div key={i} className="history-item">{h.text}</div>
+              ))}
+            </div>
+            <div className="sidebar-section">
+              <h4>Bookmarks</h4>
+              {messages.filter(m => m.bookmark).map((m, i) => (
+                <div key={i} className="history-item">{m.text}</div>
+              ))}
+            </div>
+          </div>
+
+          <div className="main-content">
+            <div className="header">
+              <span>Chat Interface</span>
+              <div className="selectors">
+                <label><strong>Model:</strong></label>
+                <select value={model} onChange={e => setModel(e.target.value)}>
+                  <option value="gpt-3.5">GPT-3.5</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-4o">GPT-4o</option>
+                </select>
+                <label><strong>Chunk Size:</strong></label>
+                <select value={chunkSize} onChange={e => setChunkSize(e.target.value)}>
+                  <option value="250">250</option>
+                  <option value="500">500</option>
+                  <option value="1000">1000</option>
+                </select>
+                <div
+                  className="theme-switch"
+                  data-theme={theme}
+                  onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                >
+                  <svg className="theme-icon sun" viewBox="0 0 24 24">
+                    <path d="M12 4.75a1 1 0 011-1h0a1 1 0 011 1V6a1 1 0 01-2 0V4.75zM12 18a6 6 0 100-12 6 6 0 000 12zM4.75 11a1 1 0 011-1H6a1 1 0 010 2h-.25a1 1 0 01-1-1zM18 12a1 1 0 011-1h.25a1 1 0 010 2H19a1 1 0 01-1-1zM6.22 6.22a1 1 0 011.42 0l.18.18a1 1 0 11-1.42 1.42l-.18-.18a1 1 0 010-1.42zM17.18 17.18a1 1 0 011.42 0l.18.18a1 1 0 11-1.42 1.42l-.18-.18a1 1 0 010-1.42zM6.22 17.78a1 1 0 000 1.42l.18.18a1 1 0 101.42-1.42l-.18-.18a1 1 0 00-1.42 0zM17.78 6.22a1 1 0 010 1.42l-.18.18a1 1 0 01-1.42-1.42l.18-.18a1 1 0 011.42 0z" />
+                  </svg>
+                  <svg className="theme-icon moon" viewBox="0 0 24 24">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                  </svg>
+                  <div className="theme-toggle-thumb"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="chat-area">
+              {messages.map((msg, i) => (
+                <div key={i} className={`message ${msg.sender}`}>
+                  <div>{msg.text}</div>
+                  <div className="message-actions">
+                    {msg.sender === 'bot' && (
+                      <button onClick={() => copyToClipboard(msg.text)} title="Copy">⧉</button>
+                    )}
+                    <span className="bookmark-btn" onClick={() => toggleBookmark(i)} title="Bookmark">
+                      {msg.bookmark ? '★' : '☆'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bottom-bar">
+              <label className="upload-label" htmlFor="chat-file">Upload</label>
+              <input id="chat-file" type="file" onChange={handleFileUpload} multiple />
+              <input
+                type="text"
+                placeholder="Type your message..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+              />
+              <button onClick={handleSend}>Send</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
