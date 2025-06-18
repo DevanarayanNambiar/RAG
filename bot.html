@@ -3,68 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ChatBot</title>
+  <title>ChatBot Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: #fff; color: #000; height: 100vh; }
+    body.dark { background: #121212; color: #fff; }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #fff;
-      color: #000;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    body.dark {
-      background: #121212;
-      color: #fff;
-    }
-
-    .container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
-
+    .container { display: flex; height: 100vh; }
     .sidebar {
-      width: 250px;
-      background-color: #f0f0f0;
+      width: 260px;
+      background: #f0f0f0;
       border-right: 1px solid #ccc;
       padding: 20px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
-
-    body.dark .sidebar {
-      background-color: #1f1f1f;
-      border-color: #444;
-    }
+    body.dark .sidebar { background-color: #1f1f1f; border-color: #444; }
 
     .sidebar h2 {
-      font-size: 20px;
-      margin-bottom: 20px;
       text-align: center;
-      color: #10a37f;
+      font-size: 20px;
+      margin-bottom: 16px;
     }
 
-    .sidebar button {
-      display: block;
-      width: 100%;
+    .sidebar label, .sidebar select, .sidebar input, .sidebar button {
+      font-size: 14px;
       margin-bottom: 10px;
+      border-radius: 8px;
+      width: 100%;
+    }
+
+    select, input[type="number"], input[type="file"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
       padding: 10px;
-      border: none;
-      border-radius: 50px;
       background-color: #10a37f;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      border: none;
+    }
+
+    .theme-toggle {
+      font-size: 20px;
+      cursor: pointer;
+      background: none;
+      border: none;
     }
 
     .main {
@@ -74,141 +66,148 @@
       padding: 20px;
     }
 
-    .header {
-      text-align: center;
+    .main h1 {
       font-size: 24px;
+      text-align: center;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
-    .toggle-switch {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 50px;
-      height: 25px;
-      background: #ccc;
-      border-radius: 50px;
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #e0e0e0;
       cursor: pointer;
     }
 
-    .toggle-switch::before {
-      content: "";
-      display: block;
-      width: 23px;
-      height: 23px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-
-    body.dark .toggle-switch::before {
-      transform: translateX(25px);
-      background: #10a37f;
-    }
+    .tab.active { background-color: #10a37f; color: white; font-weight: bold; }
 
     .chat-window {
       flex: 1;
       overflow-y: auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
       margin-bottom: 10px;
+      background-color: #fdfdfd;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark .chat-window {
+      background-color: #2b2b2b;
+      border-color: #555;
     }
 
     .message {
-      padding: 12px;
-      margin: 10px;
-      border-radius: 20px;
       max-width: 70%;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
     }
 
     .message.user {
-      background-color: #10a37f;
+      background: #10a37f;
       color: white;
-      margin-left: auto;
+      align-self: flex-end;
     }
 
     .message.bot {
-      background-color: #e0e0e0;
+      background: #e0e0e0;
       color: #000;
-      margin-right: auto;
+      align-self: flex-start;
     }
 
     body.dark .message.bot {
-      background-color: #333;
-      color: #fff;
+      background: #333;
+      color: white;
+    }
+
+    .typing-indicator {
+      font-style: italic;
+      font-size: 14px;
+      color: #666;
+      padding: 8px 12px;
+      border-radius: 10px;
+      align-self: flex-start;
+    }
+
+    .typing-indicator .dot {
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.2; }
+      20% { opacity: 1; }
+      100% { opacity: 0.2; }
     }
 
     .input-bar {
       display: flex;
       gap: 10px;
-      align-items: center;
+      margin-top: 10px;
     }
 
     .input-bar input[type="text"] {
       flex: 1;
-      padding: 12px;
-      border-radius: 50px;
+      padding: 10px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      outline: none;
     }
 
-    .input-bar input[type="file"] {
-      display: none;
+    .admin-panel.active {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
     }
 
-    .input-bar label {
-      background: #10a37f;
+    body.dark .admin-panel.active {
+      background: #2b2b2b;
       color: white;
-      border-radius: 50px;
-      padding: 10px 20px;
-      font-weight: bold;
-      cursor: pointer;
+      border-color: #555;
     }
 
-    .input-bar button {
-      background: #10a37f;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-weight: bold;
-      cursor: pointer;
+    .score-table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
     }
 
-    .upload-status {
-      font-size: 14px;
-      color: green;
-      min-width: 80px;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.6);
-      border-top: 2px solid #10a37f;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: 5px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .score-table th, .score-table td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="toggle-switch" onclick="document.body.classList.toggle('dark')"></div>
   <div id="root"></div>
-
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect } = React;
 
     function App() {
+      const [tab, setTab] = useState("chat");
       const [messages, setMessages] = useState([]);
       const [input, setInput] = useState("");
+      const [model, setModel] = useState("llama3-8b-8192");
+      const [chunkSize, setChunkSize] = useState(500);
       const [uploadStatus, setUploadStatus] = useState("");
-      const [isUploading, setIsUploading] = useState(false);
+      const [isDark, setIsDark] = useState(false);
+      const [isTyping, setIsTyping] = useState(false);
 
       const addMessage = (sender, text) => {
         setMessages(prev => [...prev, { sender, text }]);
@@ -216,86 +215,121 @@
 
       const handleSend = async () => {
         if (!input.trim()) return;
+        addMessage("user", input);
+        setInput("");
+        setIsTyping(true);
 
-        const currentInput = input;
-        setInput(""); // Clear immediately
-        addMessage("user", currentInput);
+        const response = await fetch("http://localhost:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: input, model })
+        });
 
-        try {
-          const res = await fetch("http://localhost:5000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: currentInput })
-          });
-
-          const data = await res.json();
-          addMessage("bot", data.answer || "No reply received.");
-        } catch (e) {
-          addMessage("bot", "Oops! Something went wrong.");
-        }
+        const data = await response.json();
+        addMessage("bot", data.answer);
+        setIsTyping(false);
       };
 
-      const handleUpload = async (event) => {
-        const selectedFiles = Array.from(event.target.files);
+      const handleUpload = async (e) => {
+        const files = Array.from(e.target.files);
         const formData = new FormData();
-        selectedFiles.forEach(file => formData.append("file", file));
+        files.forEach(file => formData.append("file", file));
+        formData.append("chunk_size", chunkSize);
+        formData.append("model", model);
 
-        setUploadStatus("Uploading");
-        setIsUploading(true);
-
-        try {
-          const res = await fetch("http://localhost:5000/upload", {
-            method: "POST",
-            body: formData
-          });
-
-          const data = await res.json();
-          setUploadStatus("Uploaded!");
-        } catch (e) {
-          setUploadStatus("Upload failed.");
-        }
-
-        setIsUploading(false);
+        setUploadStatus("Uploading...");
+        const res = await fetch("http://localhost:5000/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        setUploadStatus("Uploaded");
       };
+
+      useEffect(() => {
+        document.body.className = isDark ? "dark" : "";
+      }, [isDark]);
 
       return (
         <div className="container">
           <div className="sidebar">
-            <h2>ChatBot</h2>
-            <button onClick={() => setMessages([])}>+ New Chat</button>
-            <div>
-              {messages.filter((m, i) => m.sender === 'user').map((m, i) => (
-                <div key={i} className="history-item">{m.text}</div>
-              ))}
+            <h2>Settings</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "space-between" }}>
+              <label style={{ fontWeight: "bold" }}>Theme</label>
+              <button className="theme-toggle" onClick={() => setIsDark(prev => !prev)}>
+                {isDark ? "🌞" : "🌙"}
+              </button>
             </div>
+
+            <label>Model</label>
+            <select value={model} onChange={e => setModel(e.target.value)}>
+              <option value="llama3-8b-8192">LLaMA3 8B</option>
+              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+              <option value="gemma-7b-it">Gemma 7B</option>
+              <option value="gpt-4o">GPT-4o</option>
+            </select>
+
+            <label>Chunk Size</label>
+            <input type="number" value={chunkSize} onChange={e => setChunkSize(e.target.value)} />
+
+            <button onClick={() => setMessages([])}>Clear Chat History</button>
+
+            <label>Upload File</label>
+            <input type="file" multiple onChange={handleUpload} />
+            <small>{uploadStatus}</small>
           </div>
 
           <div className="main">
-            <div className="header">ChatBot</div>
-            <div className="chat-window">
-              {messages.map((msg, i) => (
-                <div key={i} className={`message ${msg.sender}`}>{msg.text}</div>
-              ))}
+            <h1>ChatBot</h1>
+
+            <div className="main-header">
+              <div className="tabs">
+                <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')}>Chat</div>
+                <div className={`tab ${tab === 'admin' ? 'active' : ''}`} onClick={() => setTab('admin')}>
+                  Evaluation Metrics
+                </div>
+              </div>
             </div>
 
-            <div className="input-bar">
-              <input
-                type="text"
-                placeholder="Ask something..."
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-              />
-              <label>
-                Upload
-                <input type="file" multiple onChange={handleUpload} />
-              </label>
-              <span className="upload-status">
-                {uploadStatus}
-                {isUploading && <span className="spinner"></span>}
-              </span>
-              <button onClick={handleSend}>Send</button>
-            </div>
+            {tab === "chat" && (
+              <>
+                <div className="chat-window">
+                  {messages.map((m, i) => (
+                    <div key={i} className={`message ${m.sender}`}>{m.text}</div>
+                  ))}
+                  {isTyping && (
+                    <div className="typing-indicator">Typing<span className="dot">.</span><span className="dot">.</span><span className="dot">.</span></div>
+                  )}
+                </div>
+                <div className="input-bar">
+                  <input
+                    type="text"
+                    value={input}
+                    placeholder="Ask something..."
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  />
+                  <button onClick={handleSend}>Send</button>
+                </div>
+              </>
+            )}
+
+            {tab === "admin" && (
+              <div className="admin-panel active">
+                <h3>Evaluation Metrics</h3>
+                <table className="score-table">
+                  <thead>
+                    <tr><th>Metric</th><th>Score</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Faithfulness</td><td>0%</td></tr>
+                    <tr><td>Relevance</td><td>0%</td></tr>
+                    <tr><td>Completeness</td><td>0%</td></tr>
+                    <tr><td>Groundedness</td><td>0%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       );
