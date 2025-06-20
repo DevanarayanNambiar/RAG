@@ -12,6 +12,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import json
 
 # Load API key
 load_dotenv()
@@ -209,9 +210,17 @@ def evaluate():
         )
         try:
             eval_json = eval_response.choices[0].message.content.strip()
-            metrics = json.loads(eval_json)
+            print('LLM EVAL RAW OUTPUT:', eval_json)  # Debug print
+            # Extract JSON block from the response
+            match = re.search(r'\{[\s\S]*?\}', eval_json)
+            if match:
+                json_str = match.group(0)
+                metrics = json.loads(json_str)
+            else:
+                raise ValueError("No JSON object found in LLM output")
         except Exception as e:
-            # Fallback in case parsing fails
+            print('EVAL PARSE ERROR:', e)  # Debug print
+            print('Failed to parse JSON from:', eval_json)  # Debug print
             metrics = {"faithfulness": 0, "relevance": 0, "completeness": 0, "groundedness": 0}
 
         results.append({

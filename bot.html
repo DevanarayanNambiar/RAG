@@ -208,6 +208,8 @@
       const [uploadStatus, setUploadStatus] = useState("");
       const [isDark, setIsDark] = useState(false);
       const [isTyping, setIsTyping] = useState(false);
+      const [metrics, setMetrics] = useState(null);
+      const [evalLoading, setEvalLoading] = useState(false);
 
       const addMessage = (sender, text) => {
         setMessages(prev => [...prev, { sender, text }]);
@@ -245,6 +247,59 @@
         const data = await res.json();
         setUploadStatus("Uploaded");
       };
+
+      // Automatically evaluate the last Q&A after bot answers
+      useEffect(() => {
+        // Only run if the last message is a bot answer and has no metrics
+        if (messages.length < 2) return;
+        const lastIdx = messages.length - 1;
+        const lastMsg = messages[lastIdx];
+        const prevMsg = messages[lastIdx - 1];
+        if (lastMsg.sender === "bot" && !lastMsg.metrics && prevMsg.sender === "user") {
+          (async () => {
+            const res = await fetch("http://localhost:5000/evaluate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ questions: [prevMsg.text] })
+            });
+            const data = await res.json();
+            const metrics = data.evaluations && data.evaluations[0] && data.evaluations[0].metrics;
+            setMessages(prev => prev.map((m, i) => i === lastIdx ? { ...m, metrics } : m));
+          })();
+        }
+      }, [messages]);
+
+      // When switching to the 'admin' tab, evaluate the most recent Q&A
+      useEffect(() => {
+        if (tab === 'admin') {
+          // Find the most recent Q&A
+          let lastBotIdx = -1;
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].sender === 'bot') {
+              lastBotIdx = i;
+              break;
+            }
+          }
+          if (lastBotIdx > 0 && messages[lastBotIdx - 1].sender === 'user') {
+            const question = messages[lastBotIdx - 1].text;
+            setEvalLoading(true);
+            fetch("http://localhost:5000/evaluate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ questions: [question] })
+            })
+              .then(res => res.json())
+              .then(data => {
+                const m = data.evaluations && data.evaluations[0] && data.evaluations[0].metrics;
+                setMetrics(m);
+                setEvalLoading(false);
+              })
+              .catch(() => setEvalLoading(false));
+          } else {
+            setMetrics(null);
+          }
+        }
+      }, [tab, messages]);
 
       useEffect(() => {
         document.body.className = isDark ? "dark" : "";
@@ -317,17 +372,23 @@
             {tab === "admin" && (
               <div className="admin-panel active">
                 <h3>Evaluation Metrics</h3>
-                <table className="score-table">
-                  <thead>
-                    <tr><th>Metric</th><th>Score</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>Faithfulness</td><td>0%</td></tr>
-                    <tr><td>Relevance</td><td>0%</td></tr>
-                    <tr><td>Completeness</td><td>0%</td></tr>
-                    <tr><td>Groundedness</td><td>0%</td></tr>
-                  </tbody>
-                </table>
+                {evalLoading ? (
+                  <div>Evaluating...</div>
+                ) : metrics ? (
+                  <table className="score-table">
+                    <thead>
+                      <tr><th>Metric</th><th>Score</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>Faithfulness</td><td>{metrics.faithfulness}%</td></tr>
+                      <tr><td>Relevance</td><td>{metrics.relevance}%</td></tr>
+                      <tr><td>Completeness</td><td>{metrics.completeness}%</td></tr>
+                      <tr><td>Groundedness</td><td>{metrics.groundedness}%</td></tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <div>No evaluation available yet.</div>
+                )}
               </div>
             )}
           </div>
@@ -337,5 +398,6 @@
 
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
-</body>
+</body>-----------------------------------------------------------------------------------------------------
 </html>
+
